@@ -1,16 +1,18 @@
 import random
 import time
+
+import requests
 from fake_useragent import UserAgent
 from urllib.parse import urlparse
 
 from requests.exceptions import SSLError
-from selenium.common import WebDriverException
+from selenium.common import WebDriverException, TimeoutException, SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 
-from core.google_links import worksheet_errors
+from core.google_links import worksheet_errors, worksheet_cloudflare, worksheet_capcha, worksheet_no_links
 
 
 def check_link(value):
@@ -38,18 +40,18 @@ def check_link(value):
         options=options
     )
 
-    def error(values):
+    def error(worksheet, values):
         try:
-            len_error = len(worksheet_errors.col_values(1))
-            worksheet_errors.update_cell(len_error + 1, 1, donor)
-            worksheet_errors.update_cell(len_error + 1, 2, acceptor)
-            worksheet_errors.update_cell(len_error + 1, 4, values)
+            len_error = len(worksheet.col_values(1))
+            worksheet.update_cell(len_error + 1, 1, donor)
+            worksheet.update_cell(len_error + 1, 2, acceptor)
+            worksheet.update_cell(len_error + 1, 4, str(values))
         except SSLError:
             time.sleep(60)
-            len_error = len(worksheet_errors.col_values(1))
-            worksheet_errors.update_cell(len_error + 1, 1, donor)
-            worksheet_errors.update_cell(len_error + 1, 2, acceptor)
-            worksheet_errors.update_cell(len_error + 1, 4, values)
+            len_error = len(worksheet.col_values(1))
+            worksheet.update_cell(len_error + 1, 1, donor)
+            worksheet.update_cell(len_error + 1, 2, acceptor)
+            worksheet.update_cell(len_error + 1, 4, str(values))
 
     try:
         driver.get(donor)
@@ -66,26 +68,35 @@ def check_link(value):
             links_attr = [' '.join(x) for x in zip(links, attrs)][index_link]
 
             content = str(driver.page_source)
+            title = str(driver.title)
 
-            if 'Аccess denied' in content:
+            if 'не найдена' in title:
+                print(f"{donor} {acceptor} 404")
+                error(worksheet_errors, "404")
+
+            elif 'not found' in title:
+                print(f"{donor} {acceptor} 404")
+                error(worksheet_errors, "404")
+
+            elif 'Access denied' in content:
                 print(f"{donor} {acceptor} Cloudflare")
-                error("Cloudflare")
+                error(worksheet_cloudflare, "Cloudflare")
 
             elif 'Сhecking if the site connection is secure' in content:
                 print(f"{donor} {acceptor} Capcha")
-                error("Capcha")
+                error(worksheet_capcha, "Capcha")
 
             elif '<html><head></head><body></body></html>' in content:
                 print(f"{donor} {acceptor} Blank site")
-                error("Blank site")
+                error(worksheet_errors, "Blank site")
 
             elif 'Bad Gateway' in content:
-                print(f"{donor} {acceptor} Bad Gateway")
-                error("Bad Gateway")
+                print(f"{donor} {acceptor} 404")
+                error(worksheet_errors, "404")
 
             elif not links_attr:
                 print(f"{donor} {acceptor} None link")
-                error("None link")
+                error(worksheet_no_links, "None link")
 
             elif len(links_attr.split()) <= 1:
                 print(f"{donor} {acceptor} - OK")
@@ -93,19 +104,29 @@ def check_link(value):
             else:
                 attr = ' '.join(links_attr.split()[1:])
                 print(f"{donor} {acceptor} {attr}")
-                error(attr)
+                error(worksheet_no_links, f"{attr}")
 
             driver.close()
             driver.quit()
         except ValueError:
             print(f"{donor} {acceptor} None link")
-            error("None link")
+            error(worksheet_no_links, "None link")
 
             driver.close()
             driver.quit()
 
+    except TimeoutException:
+        print(f"{donor} {acceptor} - Timeout")
+        error(worksheet_errors, "Timeout")
+        driver.close()
+        driver.quit()
+    except SessionNotCreatedException:
+        print(f"{donor} {acceptor} - Failed to create a new session")
+        error(worksheet_errors, "Failed to create a new session")
+        driver.close()
+        driver.quit()
     except WebDriverException:
-        print(f"{donor} {acceptor} - Bad Gateway")
-        error("Bad Gateway")
+        print(f"{donor} {acceptor} - 404")
+        error(worksheet_errors, "404")
         driver.close()
         driver.quit()
