@@ -5,8 +5,7 @@ from core.error import error
 from core.google_links import worksheet_no_links, worksheet_anti_bot
 
 
-def value_link(soup, url, acceptor, linkbuilder, web):
-    status = soup.find("div", id="otv").find_all("b")[-1].text
+def value_link(status, url, acceptor, linkbuilder, web):
     if re.search("200", status):
 
         dom_acceptor = urlparse(acceptor).netloc
@@ -53,5 +52,3 @@ def value_link(soup, url, acceptor, linkbuilder, web):
     elif re.search("505", status):
         print(f"{url} - {status}")
         error(worksheet_no_links, url, acceptor, linkbuilder, status)
-
-    return status

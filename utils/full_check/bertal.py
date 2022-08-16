@@ -6,7 +6,8 @@ import numpy
 import requests
 from bs4 import BeautifulSoup
 
-from core.google_links import ws_no_links
+from core.error import error
+from core.google_links import ws_links_preprocessing, worksheet_no_links
 from utils.full_check.status_code import value_link
 
 
@@ -15,22 +16,51 @@ def links_inf(value):
     acceptor = value[1]
     linkbuilder = value[2]
 
-    time.sleep(random.choice(range(4, 8, 1)))
-    r = requests.get(f"https://bertal.ru/index.php?a10393863/{donor}#h")
-    soup = BeautifulSoup(r.text, "lxml")
-    web = soup.find("textarea")
+    try:
+        r = requests.get(f"https://bertal.ru/index.php?a10396944/{donor}#h")
+        soup = BeautifulSoup(r.text, "lxml")
+        web = str(soup.find("textarea")).replace('&lt;', '<').replace('&gt;', '>')
+        soup = BeautifulSoup(web, "lxml")
 
-    if None == web:
-        protocol = donor[:donor.find(":")]
-        r = requests.get(f"https://bertal.ru/index.php?a10393863/{donor.replace(protocol, 'http')}#h")
+        links_acceptor = [link.get('href') for link in soup.find_all('a', href=True)]
+        index_link = links_acceptor.index(acceptor)
+        attrs_acceptor = [link.get('rel') for link in soup.find_all('a', href=True)]
+        for attr in attrs_acceptor:
+            if attr in [['nofollow'], ['noindex'], ['sponsored']]:
+                print(donor, acceptor, attrs_acceptor[index_link][2:-2])
+                error(worksheet_no_links, donor, acceptor, linkbuilder, attrs_acceptor[index_link][2:-2])
+                break
+    except ValueError:
+        r = requests.get(f"https://bertal.ru/index.php?a10396944/{donor}#h")
         soup = BeautifulSoup(r.text, "lxml")
         web = soup.find("textarea")
-        value_link(soup, donor, acceptor, linkbuilder, web)
 
-    value_link(soup, donor, acceptor, linkbuilder, web)
+        if None == web:
+            protocol = donor[:donor.find(":")]
+            r = requests.get(f"https://bertal.ru/index.php?a10393863/{donor.replace(protocol, 'http')}#h")
+            soup = BeautifulSoup(r.text, "lxml")
+            web = soup.find("textarea")
+
+            try:
+                status = soup.find("div", id="otv").find_all("b")[-1].text
+                value_link(status, donor, acceptor, linkbuilder, web)
+            except AttributeError:
+                er = soup.find("div", id="er").text[:6]
+                if er == "ОШИБКА":
+                    print(f"{donor} - Undefined server error")
+                    error(worksheet_no_links, donor, acceptor, linkbuilder, 'Undefined server error')
+
+        try:
+            status = soup.find("div", id="otv").find_all("b")[-1].text
+            value_link(status, donor, acceptor, linkbuilder, web)
+        except AttributeError:
+            er = soup.find("div", id="er").text[:6]
+            if er == "ОШИБКА":
+                pass
 
 
 if __name__ == '__main__':
-    np_ws_no_links = numpy.array(ws_no_links)
+    np_ws_links_preprocessing = numpy.array(ws_links_preprocessing)
     p = Pool(processes=1)
-    p.map(links_inf, zip(np_ws_no_links[1:, 0], np_ws_no_links[1:, 1], np_ws_no_links[1:, 2]))
+    p.map(links_inf,
+          zip(np_ws_links_preprocessing[1:, 0], np_ws_links_preprocessing[1:, 1], np_ws_links_preprocessing[1:, 2]))

@@ -9,7 +9,7 @@ from core.google_links import (
     worksheet_no_links,
     worksheet_no_proxy_preprocessing,
     worksheet_anti_bot,
-    ws_no_links
+    ws_no_links, ws_links_preprocessing
 )
 
 if __name__ == '__main__':
@@ -36,6 +36,7 @@ if __name__ == '__main__':
     p = Pool(processes=8)
     p.map(preprocessing_check_link, zip(np_ws_links[1:, 0], np_ws_links[1:, 1], np_ws_links[1:, 2]))
 
-    np_ws_no_links = numpy.array(ws_no_links)
+    np_ws_links_preprocessing = numpy.array(ws_links_preprocessing)
     p = Pool(processes=1)
-    p.map(links_inf, zip(np_ws_no_links[1:, 0], np_ws_no_links[1:, 1], np_ws_no_links[1:, 2]))
+    p.map(links_inf,
+          zip(np_ws_links_preprocessing[1:, 0], np_ws_links_preprocessing[1:, 1], np_ws_links_preprocessing[1:, 2]))
