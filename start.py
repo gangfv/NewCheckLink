@@ -1,35 +1,41 @@
+import time
+
 import numpy as numpy
 from multiprocessing import Pool
-from core.google_links import ws_links, worksheet_errors, worksheet_cloudflare, worksheet_no_links, worksheet_capcha
-from utils.check_links import check_link
+from utils.full_check.bertal import links_inf
+from utils.no_proxy_preprocessing import preprocessing_check_link
+from core.google_links import (
+    ws_links,
+    worksheet_no_links,
+    worksheet_no_proxy_preprocessing,
+    worksheet_anti_bot,
+    ws_no_links
+)
 
 if __name__ == '__main__':
-
-    mode = int(input("Выберите режим (test_link=0 или start=1): "))
-
-
     def worksheet_all(worksheet):
-        worksheet.clear()
+        worksheet.update_cell(1, 4, 'Error')
         worksheet.update_cell(1, 1, 'Donor')
         worksheet.update_cell(1, 2, 'Acceptor')
         worksheet.update_cell(1, 3, 'Linkbuilder')
-        worksheet.update_cell(1, 4, 'Error')
 
 
-    worksheet_all(worksheet_errors)
+    worksheet_no_links.clear()
+    worksheet_no_proxy_preprocessing.clear()
+    worksheet_anti_bot.clear()
+
+    time.sleep(3)
+
     worksheet_all(worksheet_no_links)
-    worksheet_all(worksheet_cloudflare)
-    worksheet_all(worksheet_capcha)
+    worksheet_all(worksheet_no_proxy_preprocessing)
+    worksheet_all(worksheet_anti_bot)
+
+    time.sleep(3)
 
     np_ws_links = numpy.array(ws_links)
+    p = Pool(processes=8)
+    p.map(preprocessing_check_link, zip(np_ws_links[1:, 0], np_ws_links[1:, 1], np_ws_links[1:, 2]))
 
-    if mode == 1:
-        process_count = int(input("Enter the number of processes: "))
-        p = Pool(processes=process_count)
-        p.map(check_link, zip(np_ws_links[1:, 0], np_ws_links[1:, 1]))
-    else:
-        donor = [
-            "https://angvremya.ru/sport/49530-snova-vdvoem-wintrike-team-rasstajutsja-s-tremja-chlenami-sostava-po-dota-2.html"]
-        acceptor = ["https://odds.ru/football/forecasts/stavka-i-prognoz-na-match-yaponiya-chili/"]
-        p = Pool(processes=1)
-        p.map(check_link, zip(donor, acceptor))
+    np_ws_no_links = numpy.array(ws_no_links)
+    p = Pool(processes=1)
+    p.map(links_inf, zip(np_ws_no_links[1:, 0], np_ws_no_links[1:, 1], np_ws_no_links[1:, 2]))
