@@ -18,8 +18,8 @@ def value_link(status, url, acceptor, linkbuilder, web):
         if search_link:
             print(f"{url} {acceptor} - ОК")
         else:
-            print(f"{url} {acceptor} - None Link")
-            error(worksheet_no_links, url, acceptor, linkbuilder, "None link")
+            print(f"{url} {acceptor} - No Link")
+            error(worksheet_no_links, url, acceptor, linkbuilder, "No link")
 
     elif re.search("400", status):
         print(f"{url} - {status}")

@@ -12,7 +12,6 @@ from utils.full_check.status_code import value_link
 
 
 def links_inf(donor, acceptor, linkbuilder):
-
     try:
         r = requests.get(f"https://bertal.ru/index.php?a10396944/{donor}#h")
         soup = BeautifulSoup(r.text, "lxml")
@@ -24,8 +23,8 @@ def links_inf(donor, acceptor, linkbuilder):
         attrs_acceptor = [link.get('rel') for link in soup.find_all('a', href=True)]
         for attr in attrs_acceptor:
             if attr in [['nofollow'], ['noindex'], ['sponsored']]:
-                print(donor, acceptor, str(attr)[2:-2])
-                error(worksheet_no_links, donor, acceptor, linkbuilder, str(attr)[2:-2])
+                print(donor, acceptor, str(attr)[2:-2].title())
+                error(worksheet_no_links, donor, acceptor, linkbuilder, str(attr)[2:-2].title())
                 break
     except ValueError:
         r = requests.get(f"https://bertal.ru/index.php?a10396944/{donor}#h")
