@@ -20,23 +20,30 @@ if __name__ == '__main__':
         worksheet.update_cell(1, 3, 'Linkbuilder')
 
 
-    worksheet_no_links.clear()
-    worksheet_no_proxy_preprocessing.clear()
-    worksheet_anti_bot.clear()
+    try:
+        worksheet_no_links.clear()
+        worksheet_no_proxy_preprocessing.clear()
+        worksheet_anti_bot.clear()
 
-    time.sleep(3)
+        time.sleep(3)
 
-    worksheet_all(worksheet_no_links)
-    worksheet_all(worksheet_no_proxy_preprocessing)
-    worksheet_all(worksheet_anti_bot)
+        worksheet_all(worksheet_no_links)
+        worksheet_all(worksheet_no_proxy_preprocessing)
+        worksheet_all(worksheet_anti_bot)
 
-    time.sleep(3)
+        time.sleep(3)
 
-    np_ws_links = numpy.array(ws_links)
-    p = Pool(processes=8)
-    p.map(preprocessing_check_link, zip(np_ws_links[1:, 0], np_ws_links[1:, 1], np_ws_links[1:, 2]))
+        np_ws_links = numpy.array(ws_links)
+        p = Pool(processes=8)
+        p.map(preprocessing_check_link, zip(np_ws_links[1:, 0], np_ws_links[1:, 1], np_ws_links[1:, 2]))
+    except:
+        pass
 
-    np_ws_links_preprocessing = numpy.array(ws_links_preprocessing)
-    p = Pool(processes=1)
-    p.map(links_inf,
-          zip(np_ws_links_preprocessing[1:, 0], np_ws_links_preprocessing[1:, 1], np_ws_links_preprocessing[1:, 2]))
+    try:
+        np_ws_links_preprocessing = numpy.array(ws_links_preprocessing)
+        for d, a, l in zip(np_ws_links_preprocessing[1:, 0], np_ws_links_preprocessing[1:, 1],
+                           np_ws_links_preprocessing[1:, 2]):
+            links_inf(d, a, l)
+
+    except:
+        pass

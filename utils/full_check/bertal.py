@@ -11,10 +11,7 @@ from core.google_links import ws_links_preprocessing, worksheet_no_links
 from utils.full_check.status_code import value_link
 
 
-def links_inf(value):
-    donor = value[0]
-    acceptor = value[1]
-    linkbuilder = value[2]
+def links_inf(donor, acceptor, linkbuilder):
 
     try:
         r = requests.get(f"https://bertal.ru/index.php?a10396944/{donor}#h")
@@ -57,10 +54,5 @@ def links_inf(value):
             er = soup.find("div", id="er").text[:6]
             if er == "ОШИБКА":
                 pass
-
-
-if __name__ == '__main__':
-    np_ws_links_preprocessing = numpy.array(ws_links_preprocessing)
-    p = Pool(processes=1)
-    p.map(links_inf,
-          zip(np_ws_links_preprocessing[1:, 0], np_ws_links_preprocessing[1:, 1], np_ws_links_preprocessing[1:, 2]))
+    except:
+        pass

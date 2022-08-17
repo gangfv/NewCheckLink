@@ -19,6 +19,7 @@ gspread==5.4.0
 h11==0.13.0
 h2==4.1.0
 hpack==4.0.0
+httplib2==0.20.4
 hyperframe==6.0.1
 idna==3.3
 kaitaistruct==0.10

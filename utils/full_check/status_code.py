@@ -9,7 +9,11 @@ def value_link(status, url, acceptor, linkbuilder, web):
     if re.search("200", status):
 
         dom_acceptor = urlparse(acceptor).netloc
-        search_link = re.search(dom_acceptor, web.decode())
+
+        if dom_acceptor[:4] == "www.":
+            search_link = re.search(dom_acceptor[4:], web.decode())
+        else:
+            search_link = re.search(dom_acceptor, web.decode())
 
         if search_link:
             print(f"{url} {acceptor} - ОК")
